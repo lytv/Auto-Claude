@@ -90,9 +90,9 @@ export class AgentQueueManager {
     }
 
     // Add model and thinking level from config
+    // Pass shorthand directly to Python - it will use resolve_model_id to respect .env overrides
     if (config?.model) {
-      const modelId = MODEL_ID_MAP[config.model] || MODEL_ID_MAP['opus'];
-      args.push('--model', modelId);
+      args.push('--model', config.model);
     }
     if (config?.thinkingLevel) {
       args.push('--thinking-level', config.thinkingLevel);
@@ -166,9 +166,9 @@ export class AgentQueueManager {
     }
 
     // Add model and thinking level from config
+    // Pass shorthand directly to Python - it will use resolve_model_id to respect .env overrides
     if (config.model) {
-      const modelId = MODEL_ID_MAP[config.model] || MODEL_ID_MAP['opus'];
-      args.push('--model', modelId);
+      args.push('--model', config.model);
     }
     if (config.thinkingLevel) {
       args.push('--thinking-level', config.thinkingLevel);

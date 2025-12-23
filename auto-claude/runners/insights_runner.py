@@ -340,6 +340,7 @@ def main():
         "--history-file", help="Path to JSON file containing conversation history"
     )
     from phase_config import resolve_model_id
+    import os
     default_model = resolve_model_id(os.environ.get("AUTO_BUILD_MODEL") or os.environ.get("ANTHROPIC_MODEL") or "sonnet")
     parser.add_argument(
         "--model",

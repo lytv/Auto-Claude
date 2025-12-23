@@ -241,8 +241,8 @@ import asyncio
 import sys
 import os
 
-# Add auto-claude to path for phase_config import
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# cwd is already set to auto-claude directory by the spawn process
+# so phase_config can be imported directly
 
 async def generate_name():
     try:

@@ -111,9 +111,9 @@ export class InsightsExecutor extends EventEmitter {
     ];
 
     // Add model config if provided
+    // Pass shorthand directly to Python - it will use resolve_model_id to respect .env overrides
     if (modelConfig) {
-      const modelId = MODEL_ID_MAP[modelConfig.model] || MODEL_ID_MAP['sonnet'];
-      args.push('--model', modelId);
+      args.push('--model', modelConfig.model);
       args.push('--thinking-level', modelConfig.thinkingLevel);
     }
 

@@ -90,11 +90,13 @@ async def run_followup_planner(
         task_logger.set_session(1)
 
     # Create client (fresh context) with planning phase thinking budget
+    from phase_config import resolve_model_id
+    resolved_model = resolve_model_id(model)
     planning_thinking_budget = get_phase_thinking_budget(spec_dir, "planning")
     client = create_client(
         project_dir,
         spec_dir,
-        model,
+        resolved_model,
         max_thinking_tokens=planning_thinking_budget,
     )
 
