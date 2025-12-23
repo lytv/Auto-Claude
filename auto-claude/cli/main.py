@@ -259,7 +259,12 @@ def main() -> None:
     debug("run.py", f"Using project directory: {project_dir}")
 
     # Get model (with env var fallback)
-    model = args.model or os.environ.get("AUTO_BUILD_MODEL", DEFAULT_MODEL)
+    model = (
+        args.model
+        or os.environ.get("AUTO_BUILD_MODEL")
+        or os.environ.get("ANTHROPIC_MODEL")
+        or DEFAULT_MODEL
+    )
 
     # Note: --dev flag is deprecated but kept for API compatibility
     if args.dev:
