@@ -8,8 +8,14 @@ for custom API endpoints.
 
 import json
 import os
-import platform
 import subprocess
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load .env file from auto-claude root directory
+env_file = Path(__file__).parent.parent / ".env"
+if env_file.exists():
+    load_dotenv(env_file)
 
 AUTH_TOKEN_ENV_VARS = [
     "CLAUDE_CODE_OAUTH_TOKEN",  # OAuth token from Claude Code CLI

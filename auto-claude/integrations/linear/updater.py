@@ -128,9 +128,16 @@ def _create_linear_client() -> ClaudeSDKClient:
 
     sdk_env = get_sdk_env_vars()
 
+    from phase_config import resolve_model_id
+    model = resolve_model_id(
+        os.environ.get("ANTHROPIC_SMALL_FAST_MODEL")
+        or os.environ.get("ANTHROPIC_MODEL")
+        or "haiku"
+    )
+
     return ClaudeSDKClient(
         options=ClaudeAgentOptions(
-            model="claude-haiku-4-5",  # Fast & cheap model for simple API calls
+            model=model,
             system_prompt="You are a Linear API assistant. Execute the requested Linear operation precisely.",
             allowed_tools=LINEAR_TOOLS,
             mcp_servers={

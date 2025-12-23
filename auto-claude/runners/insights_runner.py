@@ -132,10 +132,15 @@ async def run_with_sdk(
     project_dir: str,
     message: str,
     history: list,
-    model: str = "claude-sonnet-4-5-20250929",
+    model: str | None = None,
     thinking_level: str = "medium",
 ) -> None:
     """Run the chat using Claude SDK with streaming."""
+    from phase_config import resolve_model_id
+    if model is None:
+        model = os.environ.get("AUTO_BUILD_MODEL") or os.environ.get("ANTHROPIC_MODEL") or "sonnet"
+    
+    model = resolve_model_id(model)
     if not SDK_AVAILABLE:
         print("Claude SDK not available, falling back to simple mode", file=sys.stderr)
         run_simple(project_dir, message, history)
@@ -334,10 +339,12 @@ def main():
     parser.add_argument(
         "--history-file", help="Path to JSON file containing conversation history"
     )
+    from phase_config import resolve_model_id
+    default_model = resolve_model_id(os.environ.get("AUTO_BUILD_MODEL") or os.environ.get("ANTHROPIC_MODEL") or "sonnet")
     parser.add_argument(
         "--model",
-        default="claude-sonnet-4-5-20250929",
-        help="Claude model ID (default: claude-sonnet-4-5-20250929)",
+        default=default_model,
+        help=f"Claude model ID (default: {default_model})",
     )
     parser.add_argument(
         "--thinking-level",

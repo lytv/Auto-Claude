@@ -133,6 +133,7 @@ def main():
             print(f"Valid types: {IDEATION_TYPES}")
             sys.exit(1)
 
+    from phase_config import resolve_model_id
     orchestrator = IdeationOrchestrator(
         project_dir=project_dir,
         output_dir=args.output,
@@ -140,7 +141,7 @@ def main():
         include_roadmap_context=not args.no_roadmap,
         include_kanban_context=not args.no_kanban,
         max_ideas_per_type=args.max_ideas,
-        model=args.model,
+        model=resolve_model_id(args.model),
         thinking_level=args.thinking_level,
         refresh=args.refresh,
         append=args.append,

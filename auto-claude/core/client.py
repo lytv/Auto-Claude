@@ -22,6 +22,7 @@ from core.auth import get_sdk_env_vars, require_auth_token
 from linear_updater import is_linear_enabled
 from prompts_pkg.project_context import detect_project_capabilities, load_project_index
 from security import bash_security_hook
+from ui import Icons, highlight, icon
 
 
 def is_graphiti_mcp_enabled() -> bool:
@@ -136,6 +137,7 @@ def create_client(
     agent_type: str = "coder",
     max_thinking_tokens: int | None = None,
 ) -> ClaudeSDKClient:
+    print(f"\n{icon(Icons.SESSION)} Starting session with model: {highlight(model)}")
     """
     Create a Claude Agent SDK client with multi-layered security.
 

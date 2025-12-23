@@ -19,6 +19,15 @@ async def summarize_phase_output(
     model: str = "claude-sonnet-4-5-20250929",
     target_words: int = 500,
 ) -> str:
+    import os
+
+    # Prioritize environment variables as global overrides
+    from phase_config import resolve_model_id
+    model = resolve_model_id(
+        os.environ.get("ANTHROPIC_SMALL_FAST_MODEL")
+        or os.environ.get("ANTHROPIC_MODEL")
+        or model
+    )
     """
     Summarize phase output to a concise summary for subsequent phases.
 

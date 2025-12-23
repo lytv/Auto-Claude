@@ -53,7 +53,14 @@ def is_extraction_enabled() -> bool:
 
 def get_extraction_model() -> str:
     """Get the model to use for insight extraction."""
-    return os.environ.get("INSIGHT_EXTRACTOR_MODEL", DEFAULT_EXTRACTION_MODEL)
+    from phase_config import resolve_model_id
+    model = (
+        os.environ.get("INSIGHT_EXTRACTOR_MODEL")
+        or os.environ.get("ANTHROPIC_SMALL_FAST_MODEL")
+        or os.environ.get("ANTHROPIC_MODEL")
+        or "haiku"
+    )
+    return resolve_model_id(model)
 
 
 # =============================================================================

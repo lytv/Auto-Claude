@@ -179,10 +179,11 @@ class GraphitiConfig:
         )
 
         # Anthropic settings
+        from phase_config import resolve_model_id
         anthropic_api_key = os.environ.get("ANTHROPIC_API_KEY", "")
-        anthropic_model = os.environ.get(
-            "GRAPHITI_ANTHROPIC_MODEL", "claude-sonnet-4-5-latest"
-        )
+        anthropic_model = resolve_model_id(os.environ.get(
+            "GRAPHITI_ANTHROPIC_MODEL", "sonnet"
+        ))
 
         # Azure OpenAI settings
         azure_openai_api_key = os.environ.get("AZURE_OPENAI_API_KEY", "")

@@ -53,11 +53,14 @@ class RoadmapOrchestrator:
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
         # Initialize executors
+        from phase_config import resolve_model_id
+        resolved_model = resolve_model_id(self.model)
+        
         self.script_executor = ScriptExecutor(self.project_dir)
         self.agent_executor = AgentExecutor(
             self.project_dir,
             self.output_dir,
-            self.model,
+            resolved_model,
             create_client,
             self.thinking_budget,
         )

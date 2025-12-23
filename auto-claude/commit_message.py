@@ -186,8 +186,8 @@ Fixes #N (if applicable)"""
     return prompt
 
 
-async def _call_claude_haiku(prompt: str) -> str:
-    """Call Claude Haiku with low thinking for fast commit message generation."""
+async def _call_claude_for_commit(prompt: str) -> str:
+    """Call Claude with low thinking for fast commit message generation."""
     from core.auth import ensure_claude_code_oauth_token, get_auth_token
 
     if not get_auth_token():
@@ -202,9 +202,17 @@ async def _call_claude_haiku(prompt: str) -> str:
         logger.warning("claude_agent_sdk not installed")
         return ""
 
+    # Respect model overrides from environment
+    from phase_config import resolve_model_id
+    model = resolve_model_id(
+        os.environ.get("ANTHROPIC_SMALL_FAST_MODEL")
+        or os.environ.get("ANTHROPIC_MODEL")
+        or "haiku"
+    )
+
     client = ClaudeSDKClient(
         options=ClaudeAgentOptions(
-            model="claude-haiku-4-5-20251001",
+            model=model,
             system_prompt=SYSTEM_PROMPT,
             allowed_tools=[],
             max_turns=1,
@@ -288,10 +296,10 @@ def generate_commit_message_sync(
 
             with concurrent.futures.ThreadPoolExecutor() as pool:
                 result = pool.submit(
-                    lambda: asyncio.run(_call_claude_haiku(prompt))
+                    lambda: asyncio.run(_call_claude_for_commit(prompt))
                 ).result()
         else:
-            result = asyncio.run(_call_claude_haiku(prompt))
+            result = asyncio.run(_call_claude_for_commit(prompt))
 
         if result:
             return result
@@ -353,7 +361,7 @@ async def generate_commit_message(
 
     # Call Claude
     try:
-        result = await _call_claude_haiku(prompt)
+        result = await _call_claude_for_commit(prompt)
         if result:
             return result
     except Exception as e:

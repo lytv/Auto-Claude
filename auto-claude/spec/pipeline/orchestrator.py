@@ -10,7 +10,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 from analysis.analyzers import analyze_project
-from phase_config import get_thinking_budget
+from phase_config import get_thinking_budget, resolve_model_id
 from prompts_pkg.project_context import should_refresh_project_index
 from review import run_review_checkpoint
 from task_logger import (
@@ -62,9 +62,14 @@ class SpecOrchestrator:
         use_ai_assessment: bool = True,  # Use AI for complexity assessment (vs heuristics)
         dev_mode: bool = False,  # Dev mode: specs in gitignored folder, code changes to auto-claude/
     ):
-        """Initialize the spec orchestrator.
+        import os
 
-        Args:
+        # Prioritize environment variables as global overrides
+        env_model = os.environ.get("AUTO_BUILD_MODEL") or os.environ.get("ANTHROPIC_MODEL")
+        if env_model:
+            model = resolve_model_id(env_model)
+
+        """Initialize the spec orchestrator.
             project_dir: The project root directory
             task_description: Optional task description
             spec_name: Optional spec name (for existing specs)
@@ -77,7 +82,7 @@ class SpecOrchestrator:
         """
         self.project_dir = Path(project_dir)
         self.task_description = task_description
-        self.model = model
+        self.model = resolve_model_id(model)
         self.thinking_level = thinking_level
         self.complexity_override = complexity_override
         self.use_ai_assessment = use_ai_assessment
@@ -171,10 +176,12 @@ class SpecOrchestrator:
                 return
 
             # Summarize the output
+            import os
+            summary_model = os.environ.get("ANTHROPIC_SMALL_FAST_MODEL") or os.environ.get("ANTHROPIC_MODEL") or "claude-sonnet-4-5-20250929"
             summary = await summarize_phase_output(
                 phase_name,
                 phase_output,
-                model="claude-sonnet-4-5-20250929",  # Use Sonnet for efficiency
+                model=summary_model,
                 target_words=500,
             )
 

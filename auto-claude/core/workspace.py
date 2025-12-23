@@ -1222,9 +1222,17 @@ async def _merge_file_with_ai_async(
                     error="claude_agent_sdk not installed",
                 )
 
+            # Respect model overrides from environment
+            from phase_config import resolve_model_id
+            model = resolve_model_id(
+                os.environ.get("ANTHROPIC_SMALL_FAST_MODEL")
+                or os.environ.get("ANTHROPIC_MODEL")
+                or "haiku"
+            )
+
             client = ClaudeSDKClient(
                 options=ClaudeAgentOptions(
-                    model="claude-haiku-4-5-20251001",
+                    model=model,
                     system_prompt=AI_MERGE_SYSTEM_PROMPT,
                     allowed_tools=[],
                     max_turns=1,

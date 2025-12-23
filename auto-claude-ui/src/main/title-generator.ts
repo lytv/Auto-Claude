@@ -90,7 +90,7 @@ export class TitleGenerator extends EventEmitter {
           let value = trimmed.substring(eqIndex + 1).trim();
 
           if ((value.startsWith('"') && value.endsWith('"')) ||
-              (value.startsWith("'") && value.endsWith("'"))) {
+            (value.startsWith("'") && value.endsWith("'"))) {
             value = value.slice(1, -1);
           }
 
@@ -221,20 +221,32 @@ Title:`;
     // Escape the prompt for Python string - use JSON.stringify for safe escaping
     const escapedPrompt = JSON.stringify(prompt);
 
+    // Get model from environment (loaded from .env) to avoid hardcoding Haiku
+    const autoBuildEnv = this.loadAutoBuildEnv();
+    const model = autoBuildEnv['ANTHROPIC_SMALL_FAST_MODEL'] || autoBuildEnv['ANTHROPIC_MODEL'] || 'haiku';
+
     return `
 import asyncio
 import sys
+import os
+
+# Add auto-claude to path for phase_config import
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 async def generate_title():
     try:
         from claude_agent_sdk import ClaudeAgentOptions, ClaudeSDKClient
+        from phase_config import resolve_model_id
 
         prompt = ${escapedPrompt}
+        
+        # Resolve the model using environment-aware mapping
+        model = resolve_model_id("${model}")
 
         # Create a minimal client for simple text generation (no tools needed)
         client = ClaudeSDKClient(
             options=ClaudeAgentOptions(
-                model="claude-haiku-4-5",
+                model=model,
                 system_prompt="You generate short, concise task titles (3-7 words). Output ONLY the title, nothing else. No quotes, no explanation, no preamble.",
                 max_turns=1,
             )

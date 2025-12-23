@@ -45,7 +45,11 @@ class IdeationConfigManager:
             append: Preserve existing ideas when merging
         """
         self.project_dir = Path(project_dir)
-        self.model = model
+        
+        # Resolve model using environment-aware mapping
+        from phase_config import resolve_model_id
+        self.model = resolve_model_id(model)
+        
         self.thinking_level = thinking_level
         self.refresh = refresh
         self.append = append

@@ -91,6 +91,13 @@ class ClaudeAnalysisClient:
 
         return settings_file
 
+    def _get_model(self) -> str:
+        """Get model ID with environment overrides."""
+        import os
+        from phase_config import resolve_model_id
+        model = os.environ.get("AUTO_BUILD_MODEL") or os.environ.get("ANTHROPIC_MODEL") or self.DEFAULT_MODEL
+        return resolve_model_id(model)
+
     def _create_client(self, settings_file: Path) -> Any:
         """
         Create configured Claude SDK client.
@@ -110,7 +117,7 @@ class ClaudeAnalysisClient:
 
         return ClaudeSDKClient(
             options=ClaudeAgentOptions(
-                model=self.DEFAULT_MODEL,
+                model=self._get_model(),
                 system_prompt=system_prompt,
                 allowed_tools=self.ALLOWED_TOOLS,
                 max_turns=self.MAX_TURNS,

@@ -10,12 +10,53 @@ import json
 from pathlib import Path
 from typing import Literal, TypedDict
 
-# Model shorthand to full model ID mapping
-MODEL_ID_MAP: dict[str, str] = {
+import os
+from dotenv import load_dotenv
+
+# Load .env file from auto-claude root directory
+env_file = Path(__file__).parent / ".env"
+if env_file.exists():
+    load_dotenv(env_file)
+
+# Default model IDs for shorthands
+DEFAULT_MODEL_IDS: dict[str, str] = {
     "opus": "claude-opus-4-5-20251101",
     "sonnet": "claude-sonnet-4-5-20250929",
     "haiku": "claude-haiku-4-5-20251001",
 }
+
+def get_model_id_map() -> dict[str, str]:
+    """Get the model ID map, respecting environment overrides."""
+    primary_model = os.environ.get("AUTO_BUILD_MODEL") or os.environ.get("ANTHROPIC_MODEL")
+    fast_model = os.environ.get("ANTHROPIC_SMALL_FAST_MODEL") or primary_model
+    
+    mapping = DEFAULT_MODEL_IDS.copy()
+    
+    # Catch-all for common Claude IDs to redirect to Kimi/Gemini
+    common_ids = [
+        "claude-3-5-sonnet-latest", "claude-3-5-sonnet-20241022", "claude-sonnet-4-5-latest", "claude-sonnet-4-5-20250929",
+        "claude-3-5-haiku-latest", "claude-3-5-haiku-20241022", "claude-haiku-4-5-latest", "claude-haiku-4-5-20251001",
+        "claude-3-opus-latest", "claude-3-opus-20240229", "claude-opus-4-5-latest", "claude-opus-4-5-20251101",
+        "claude-3-sonnet-20240229", "claude-3-haiku-20240307"
+    ]
+    
+    if primary_model:
+        mapping["sonnet"] = primary_model
+        mapping["opus"] = primary_model
+        for cid in common_ids:
+            if "haiku" not in cid:
+                mapping[cid] = primary_model
+                
+    if fast_model:
+        mapping["haiku"] = fast_model
+        for cid in common_ids:
+            if "haiku" in cid:
+                mapping[cid] = fast_model
+                
+    return mapping
+
+# For backward compatibility with modules that import MODEL_ID_MAP directly
+MODEL_ID_MAP = get_model_id_map()
 
 # Thinking level to budget tokens mapping (None = no extended thinking)
 # Values must match auto-claude-ui/src/shared/constants/models.ts THINKING_BUDGET_MAP
@@ -89,23 +130,28 @@ class TaskMetadataConfig(TypedDict, total=False):
 Phase = Literal["spec", "planning", "coding", "qa"]
 
 
-def resolve_model_id(model: str) -> str:
-    """
-    Resolve a model shorthand (haiku, sonnet, opus) to a full model ID.
-    If the model is already a full ID, return it unchanged.
+def resolve_model_id(model_id: str) -> str:
+    """Resolve a model ID or shorthand to the preferred model."""
+    if not model_id:
+        return ""
+        
+    # Always refresh mapping from environment
+    mapping = get_model_id_map()
+    
+    # Check if this ID or shorthand should be redirected
+    resolved = model_id
+    if model_id.lower() in mapping:
+        resolved = mapping[model_id.lower()]
+    elif "/" not in model_id:
+        # It's a shorthand not in our mapping, try to use it as is or default
+        resolved = model_id
 
-    Args:
-        model: Model shorthand or full ID
-
-    Returns:
-        Full Claude model ID
-    """
-    # Check if it's a shorthand
-    if model in MODEL_ID_MAP:
-        return MODEL_ID_MAP[model]
-
-    # Already a full model ID
-    return model
+    # Debug: log every resolution to stderr to catch leaks
+    if resolved != model_id:
+        import sys
+        print(f" [DEBUG] Redirected model: {model_id} -> {resolved}", file=sys.stderr)
+        
+    return resolved
 
 
 def get_thinking_budget(thinking_level: str) -> int | None:
@@ -174,7 +220,15 @@ def get_phase_model(
     Returns:
         Resolved full model ID
     """
-    # CLI argument takes precedence
+    # PRE-EMPTIVE ENV OVERRIDE (Thorough / Triet de fix)
+    # This ensures that if the environment says to use Kimi, we use Kimi,
+    # regardless of what the UI or CLI requested.
+    import os
+    env_model = os.environ.get("AUTO_BUILD_MODEL") or os.environ.get("ANTHROPIC_MODEL")
+    if env_model:
+        return resolve_model_id(env_model)
+
+    # CLI argument takes precedence if no global env override
     if cli_model:
         return resolve_model_id(cli_model)
 

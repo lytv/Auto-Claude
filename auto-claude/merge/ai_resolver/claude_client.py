@@ -52,10 +52,14 @@ def create_claude_resolver() -> AIResolver:
         """Call Claude using the Agent SDK for merge resolution."""
 
         async def _run_merge() -> str:
+            # Use resolve_model_id for dynamic redirection
+            from phase_config import resolve_model_id
+            model = resolve_model_id("sonnet")
+            
             # Create a minimal client for merge resolution
             client = ClaudeSDKClient(
                 options=ClaudeAgentOptions(
-                    model="sonnet",
+                    model=model,
                     system_prompt=system,
                     allowed_tools=[],  # No tools needed for merge
                     max_turns=1,

@@ -159,10 +159,12 @@ Examples:
         default=Path.cwd(),
         help="Project directory (default: current directory)",
     )
+    from phase_config import resolve_model_id
+    default_model = resolve_model_id(os.environ.get("AUTO_BUILD_MODEL") or os.environ.get("ANTHROPIC_MODEL") or "sonnet")
     parser.add_argument(
         "--model",
         type=str,
-        default="sonnet",
+        default=default_model,
         help="Model to use for agent phases (haiku, sonnet, opus, or full model ID)",
     )
     parser.add_argument(

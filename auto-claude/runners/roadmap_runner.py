@@ -109,10 +109,11 @@ def main():
         "roadmap_runner", "Creating RoadmapOrchestrator", project_dir=str(project_dir)
     )
 
+    from phase_config import resolve_model_id
     orchestrator = RoadmapOrchestrator(
         project_dir=project_dir,
         output_dir=args.output,
-        model=args.model,
+        model=resolve_model_id(args.model),
         thinking_level=args.thinking_level,
         refresh=args.refresh,
         enable_competitor_analysis=args.enable_competitor_analysis,
