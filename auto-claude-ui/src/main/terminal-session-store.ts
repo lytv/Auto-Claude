@@ -1,6 +1,6 @@
 import { app } from 'electron';
 import { join } from 'path';
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync, mkdirSync, renameSync } from 'fs';
 
 /**
  * Persisted terminal session data
@@ -96,6 +96,10 @@ export class TerminalSessionStore {
     try {
       if (existsSync(this.storePath)) {
         const content = readFileSync(this.storePath, 'utf-8');
+        if (!content || content.trim() === '') {
+          console.warn('[TerminalSessionStore] Session file is empty, initializing new state');
+          return { version: STORE_VERSION, sessionsByDate: {} };
+        }
         const data = JSON.parse(content);
 
         // Migrate from v1 to v2 structure
@@ -130,7 +134,9 @@ export class TerminalSessionStore {
    */
   private save(): void {
     try {
-      writeFileSync(this.storePath, JSON.stringify(this.data, null, 2));
+      const tmpPath = this.storePath + '.tmp';
+      writeFileSync(tmpPath, JSON.stringify(this.data, null, 2));
+      renameSync(tmpPath, this.storePath);
     } catch (error) {
       console.error('[TerminalSessionStore] Error saving sessions:', error);
     }

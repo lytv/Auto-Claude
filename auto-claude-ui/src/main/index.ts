@@ -76,9 +76,9 @@ function createWindow(): void {
   }
 
   // Open DevTools in development
-  if (is.dev) {
-    mainWindow.webContents.openDevTools({ mode: 'right' });
-  }
+  // if (is.dev) {
+  //   mainWindow.webContents.openDevTools({ mode: 'right' });
+  // }
 
   // Clean up on close
   mainWindow.on('closed', () => {

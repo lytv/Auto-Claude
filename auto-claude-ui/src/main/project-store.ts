@@ -1,5 +1,5 @@
 import { app } from 'electron';
-import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, Dirent } from 'fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, Dirent, renameSync } from 'fs';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import type { Project, ProjectSettings, Task, TaskStatus, TaskMetadata, ImplementationPlan, ReviewReason, PlanSubtask } from '../shared/types';
@@ -39,6 +39,9 @@ export class ProjectStore {
     if (existsSync(this.storePath)) {
       try {
         const content = readFileSync(this.storePath, 'utf-8');
+        if (!content || content.trim() === '') {
+          return { projects: [], settings: {} };
+        }
         const data = JSON.parse(content);
         // Convert date strings back to Date objects
         data.projects = data.projects.map((p: Project) => ({
@@ -58,7 +61,13 @@ export class ProjectStore {
    * Save store to disk
    */
   private save(): void {
-    writeFileSync(this.storePath, JSON.stringify(this.data, null, 2));
+    try {
+      const tmpPath = this.storePath + '.tmp';
+      writeFileSync(tmpPath, JSON.stringify(this.data, null, 2));
+      renameSync(tmpPath, this.storePath);
+    } catch (error) {
+      console.error('[ProjectStore] Error saving store:', error);
+    }
   }
 
   /**

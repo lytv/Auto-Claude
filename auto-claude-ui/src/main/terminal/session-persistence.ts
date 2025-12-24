@@ -62,9 +62,12 @@ class SessionPersistence {
     }
 
     try {
-      const data: TerminalSessionsFile = JSON.parse(
-        fs.readFileSync(SESSIONS_FILE, 'utf8')
-      );
+      const content = fs.readFileSync(SESSIONS_FILE, 'utf8');
+      if (!content || content.trim() === '') {
+        console.warn('[SessionPersistence] Session file is empty, starting fresh');
+        return [];
+      }
+      const data: TerminalSessionsFile = JSON.parse(content);
 
       // Validate version
       if (data.version !== 2) {
@@ -265,7 +268,9 @@ class SessionPersistence {
     };
 
     try {
-      fs.writeFileSync(SESSIONS_FILE, JSON.stringify(data, null, 2), 'utf8');
+      const tmpPath = SESSIONS_FILE + '.tmp';
+      fs.writeFileSync(tmpPath, JSON.stringify(data, null, 2), 'utf8');
+      fs.renameSync(tmpPath, SESSIONS_FILE);
       console.warn(`[SessionPersistence] Saved ${data.sessions.length} sessions to disk`);
     } catch (error) {
       console.error('[SessionPersistence] Failed to save sessions:', error);
