@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Brain, Scale, Zap, Check, Sparkles, ChevronDown, ChevronUp, RotateCcw } from 'lucide-react';
+import { Brain, Scale as Balancer, Zap, Check, Sparkles, ChevronDown, ChevronUp, RotateCcw, Rocket, Flame } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import {
   DEFAULT_AGENT_PROFILES,
@@ -8,7 +8,6 @@ import {
   DEFAULT_PHASE_MODELS,
   DEFAULT_PHASE_THINKING
 } from '../../../shared/constants';
-import { useSettingsStore, saveSettings } from '../../stores/settings-store';
 import { SettingsSection } from './SettingsSection';
 import { Label } from '../ui/label';
 import { Button } from '../ui/button';
@@ -19,32 +18,38 @@ import {
   SelectTrigger,
   SelectValue
 } from '../ui/select';
-import type { AgentProfile, PhaseModelConfig, PhaseThinkingConfig, ModelTypeShort, ThinkingLevel } from '../../../shared/types/settings';
+import type { AppSettings, AgentProfile, PhaseModelConfig, PhaseThinkingConfig, ModelTypeShort, ThinkingLevel } from '../../../shared/types';
 
 /**
  * Icon mapping for agent profile icons
  */
 const iconMap: Record<string, React.ElementType> = {
   Brain,
-  Scale,
+  Balancer,
+  Scale: Balancer,
   Zap,
-  Sparkles
+  Sparkles,
+  Rocket,
+  Flame
 };
 
 const PHASE_LABELS: Record<keyof PhaseModelConfig, { label: string; description: string }> = {
-  spec: { label: 'Spec Creation', description: 'Discovery, requirements, context gathering' },
-  planning: { label: 'Planning', description: 'Implementation planning and architecture' },
-  coding: { label: 'Coding', description: 'Actual code implementation' },
+  spec: { label: 'Spec Creation', description: 'Context gathering and requirements' },
+  planning: { label: 'Implementation Planning', description: 'Subtask-based roadmap creation' },
+  coding: { label: 'Coding & Iteration', description: 'Autonomous file modification' },
   qa: { label: 'QA Review', description: 'Quality assurance and validation' }
 };
+
+interface AgentProfileSettingsProps {
+  settings: AppSettings;
+  onSettingsChange: (updates: Partial<AppSettings>) => void;
+}
 
 /**
  * Agent Profile Settings component
  * Displays preset agent profiles for quick model/thinking level configuration
- * Used in the Settings page under Agent Settings
  */
-export function AgentProfileSettings() {
-  const settings = useSettingsStore((state) => state.settings);
+export function AgentProfileSettings({ settings, onSettingsChange }: AgentProfileSettingsProps) {
   const selectedProfileId = settings.selectedAgentProfile || 'auto';
   const [showPhaseConfig, setShowPhaseConfig] = useState(selectedProfileId === 'auto');
 
@@ -52,31 +57,26 @@ export function AgentProfileSettings() {
   const currentPhaseModels: PhaseModelConfig = settings.customPhaseModels || DEFAULT_PHASE_MODELS;
   const currentPhaseThinking: PhaseThinkingConfig = settings.customPhaseThinking || DEFAULT_PHASE_THINKING;
 
-  const handleSelectProfile = async (profileId: string) => {
-    const success = await saveSettings({ selectedAgentProfile: profileId });
-    if (!success) {
-      // Log error for debugging - in future could show user toast notification
-      console.error('Failed to save agent profile selection');
-      return;
-    }
+  const handleSelectProfile = (profileId: string) => {
+    onSettingsChange({ selectedAgentProfile: profileId });
     // Auto-expand phase config when Auto profile is selected
     if (profileId === 'auto') {
       setShowPhaseConfig(true);
     }
   };
 
-  const handlePhaseModelChange = async (phase: keyof PhaseModelConfig, value: ModelTypeShort) => {
+  const handlePhaseModelChange = (phase: keyof PhaseModelConfig, value: ModelTypeShort) => {
     const newPhaseModels = { ...currentPhaseModels, [phase]: value };
-    await saveSettings({ customPhaseModels: newPhaseModels });
+    onSettingsChange({ customPhaseModels: newPhaseModels });
   };
 
-  const handlePhaseThinkingChange = async (phase: keyof PhaseThinkingConfig, value: ThinkingLevel) => {
+  const handlePhaseThinkingChange = (phase: keyof PhaseThinkingConfig, value: ThinkingLevel) => {
     const newPhaseThinking = { ...currentPhaseThinking, [phase]: value };
-    await saveSettings({ customPhaseThinking: newPhaseThinking });
+    onSettingsChange({ customPhaseThinking: newPhaseThinking });
   };
 
-  const handleResetToDefaults = async () => {
-    await saveSettings({
+  const handleResetToDefaults = () => { // Made synchronous as onSettingsChange is synchronous
+    onSettingsChange({
       customPhaseModels: DEFAULT_PHASE_MODELS,
       customPhaseThinking: DEFAULT_PHASE_THINKING
     });

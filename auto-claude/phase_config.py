@@ -220,33 +220,33 @@ def get_phase_model(
     Returns:
         Resolved full model ID
     """
-    # PRE-EMPTIVE ENV OVERRIDE (Thorough / Triet de fix)
-    # This ensures that if the environment says to use Kimi, we use Kimi,
-    # regardless of what the UI or CLI requested.
-    import os
-    env_model = os.environ.get("AUTO_BUILD_MODEL") or os.environ.get("ANTHROPIC_MODEL")
-    if env_model:
-        return resolve_model_id(env_model)
-
-    # CLI argument takes precedence if no global env override
-    if cli_model:
-        return resolve_model_id(cli_model)
-
     # Load task metadata
     metadata = load_task_metadata(spec_dir)
 
+    # 1. CLI argument takes precedence (explicit user request)
+    if cli_model:
+        return resolve_model_id(cli_model)
+
+    # 2. Check task metadata (saved profile settings)
     if metadata:
         # Check for auto profile with phase-specific config
         if metadata.get("isAutoProfile") and metadata.get("phaseModels"):
             phase_models = metadata["phaseModels"]
             model = phase_models.get(phase, DEFAULT_PHASE_MODELS[phase])
-            return resolve_model_id(model)
+            if model:
+                return resolve_model_id(model)
 
         # Non-auto profile: use single model
         if metadata.get("model"):
             return resolve_model_id(metadata["model"])
 
-    # Fall back to default phase configuration
+    # 3. GLOBAL ENV OVERRIDE (Fallback / Forced override)
+    # This acts as a global override or fallback if nothing else is specified
+    env_model = os.environ.get("AUTO_BUILD_MODEL") or os.environ.get("ANTHROPIC_MODEL")
+    if env_model:
+        return resolve_model_id(env_model)
+
+    # 4. Fall back to default phase configuration
     return resolve_model_id(DEFAULT_PHASE_MODELS[phase])
 
 

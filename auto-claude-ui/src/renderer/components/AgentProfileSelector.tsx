@@ -94,16 +94,16 @@ export function AgentProfileSelector({
       // Keep current model/thinking level, just mark as custom
       onProfileChange('custom', model as ModelType || 'sonnet', thinkingLevel as ThinkingLevel || 'medium');
     } else if (selectedId === 'auto') {
-      // Auto profile - set defaults
+      // Auto profile - set defaults if not already present
       const autoProfile = DEFAULT_AGENT_PROFILES.find(p => p.id === 'auto');
       if (autoProfile) {
         onProfileChange('auto', autoProfile.model, autoProfile.thinkingLevel);
-        // Initialize phase configs with defaults if callback provided
-        if (onPhaseModelsChange && autoProfile.phaseModels) {
-          onPhaseModelsChange(autoProfile.phaseModels);
+        // Preserve current phase configs if they exist, otherwise use defaults
+        if (onPhaseModelsChange) {
+          onPhaseModelsChange(phaseModels || autoProfile.phaseModels || DEFAULT_PHASE_MODELS);
         }
-        if (onPhaseThinkingChange && autoProfile.phaseThinking) {
-          onPhaseThinkingChange(autoProfile.phaseThinking);
+        if (onPhaseThinkingChange) {
+          onPhaseThinkingChange(phaseThinking || autoProfile.phaseThinking || DEFAULT_PHASE_THINKING);
         }
       }
     } else {
