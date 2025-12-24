@@ -15,7 +15,8 @@ const ITEM_HEIGHT = 28;
 const OVERSCAN = 10;
 
 export function FileTree({ rootPath }: FileTreeProps) {
-  const parentRef = useRef<HTMLDivElement>(null);
+  // This ref is the scroll container - FileTree manages its own scrolling
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const {
     loadDirectory,
@@ -40,10 +41,10 @@ export function FileTree({ rootPath }: FileTreeProps) {
     }
   }, [rootPath, hasRootFiles, loading, loadDirectory]);
 
-  // Set up the virtualizer
+  // Set up the virtualizer with the internal scroll container
   const rowVirtualizer = useVirtualizer({
     count,
-    getScrollElement: () => parentRef.current,
+    getScrollElement: () => scrollContainerRef.current,
     estimateSize: () => ITEM_HEIGHT,
     overscan: OVERSCAN,
   });
@@ -63,7 +64,7 @@ export function FileTree({ rootPath }: FileTreeProps) {
 
   if (isRootLoading && !hasRootFiles) {
     return (
-      <div className="flex items-center justify-center py-8">
+      <div className="flex items-center justify-center py-8 h-full">
         <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
       </div>
     );
@@ -71,7 +72,7 @@ export function FileTree({ rootPath }: FileTreeProps) {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
+      <div className="flex flex-col items-center justify-center py-8 px-4 text-center h-full">
         <AlertCircle className="h-5 w-5 text-destructive mb-2" />
         <p className="text-xs text-destructive">{error}</p>
       </div>
@@ -80,24 +81,27 @@ export function FileTree({ rootPath }: FileTreeProps) {
 
   if (!hasRootFiles || count === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
+      <div className="flex flex-col items-center justify-center py-8 px-4 text-center h-full">
         <FolderOpen className="h-6 w-6 text-muted-foreground mb-2" />
         <p className="text-xs text-muted-foreground">No files found</p>
       </div>
     );
   }
 
+  // FileTree is now self-contained with its own scroll container
   return (
     <div
-      ref={parentRef}
-      className="h-full overflow-auto py-1"
+      ref={scrollContainerRef}
+      className="h-full w-full overflow-auto force-scrollbar"
+      style={{ overscrollBehavior: 'contain' }}
     >
-      {/* The large inner element to hold all of the items */}
+      {/* Inner content div with calculated height for proper scrolling */}
       <div
         style={{
           height: `${rowVirtualizer.getTotalSize()}px`,
           width: '100%',
           position: 'relative',
+          padding: '4px'
         }}
       >
         {/* Only the visible items in the virtualizer */}

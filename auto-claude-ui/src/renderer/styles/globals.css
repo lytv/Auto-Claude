@@ -1086,6 +1086,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
   opacity: 0.5;
 }
 
@@ -1095,6 +1096,23 @@ body {
 
 .dark ::-webkit-scrollbar-thumb:hover {
   background: rgba(134, 143, 151, 0.5);
+}
+
+/* Force visible scrollbars for containers that need them always, like FileTree on macOS */
+.force-scrollbar::-webkit-scrollbar {
+  display: block !important;
+  width: 6px !important;
+}
+
+.force-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--muted-foreground) !important;
+  border-radius: 10px !important;
+  border: 2px solid transparent !important;
+  background-clip: content-box !important;
+}
+
+.dark .force-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(134, 143, 151, 0.5) !important;
 }
 
 /* Electron window dragging area */

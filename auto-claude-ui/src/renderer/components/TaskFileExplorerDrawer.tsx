@@ -1,7 +1,6 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { X, FolderTree, RefreshCw } from 'lucide-react';
 import { Button } from './ui/button';
-import { ScrollArea } from './ui/scroll-area';
 import { FileTree } from './FileTree';
 import { useFileExplorerStore } from '../stores/file-explorer-store';
 
@@ -55,7 +54,7 @@ export function TaskFileExplorerDrawer({ isOpen, onClose, projectPath }: TaskFil
             width: { duration: 0.3, ease: [0.4, 0, 0.2, 1] },
             opacity: { duration: 0.2 }
           }}
-          className="h-full bg-card border-l border-border flex flex-col shadow-xl overflow-hidden"
+          className="h-full bg-card border-l border-border flex flex-col shadow-xl overflow-hidden shrink-0"
           style={{ minWidth: 0 }}
         >
           <motion.div
@@ -68,7 +67,7 @@ export function TaskFileExplorerDrawer({ isOpen, onClose, projectPath }: TaskFil
               delay: 0.1,
               ease: [0.4, 0, 0.2, 1]
             }}
-            className="flex flex-col h-full w-72"
+            className="flex flex-col w-72 h-full"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-card/80 shrink-0">
@@ -105,10 +104,10 @@ export function TaskFileExplorerDrawer({ isOpen, onClose, projectPath }: TaskFil
               </p>
             </div>
 
-            {/* File tree */}
-            <ScrollArea className="flex-1">
+            {/* File tree container - flex-1 with min-h-0 to enable proper scrolling inside FileTree */}
+            <div className="flex-1 min-h-0">
               <FileTree rootPath={projectPath} />
-            </ScrollArea>
+            </div>
           </motion.div>
         </motion.div>
       )}
