@@ -13,7 +13,7 @@ Detects authentication and authorization patterns:
 
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from ..base import BaseAnalyzer
 
@@ -109,7 +109,7 @@ class AuthDetector(BaseAnalyzer):
                 auth_info["libraries"].append(lib)
                 break
 
-    def _find_user_model(self) -> str | None:
+    def _find_user_model(self) -> Optional[str]:
         """Find the user model file."""
         for model_file in self.USER_MODEL_FILES:
             if self._exists(model_file):

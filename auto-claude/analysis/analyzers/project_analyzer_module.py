@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from .base import SERVICE_INDICATORS, SERVICE_ROOT_FILES, SKIP_DIRS
+from .pattern_inference import PatternInferenceEngine
 from .service_analyzer import ServiceAnalyzer
 
 
@@ -32,6 +33,7 @@ class ProjectAnalyzer:
         self._analyze_infrastructure()
         self._detect_conventions()
         self._map_dependencies()
+        self._infer_patterns()
         return self.index
 
     def _detect_project_type(self) -> None:
@@ -251,6 +253,11 @@ class ProjectAnalyzer:
             conventions["git_hooks"] = "pre-commit"
 
         self.index["conventions"] = conventions
+
+    def _infer_patterns(self) -> None:
+        """Infer development patterns and protocols."""
+        engine = PatternInferenceEngine(self.index)
+        self.index["implied_patterns"] = engine.infer()
 
     def _map_dependencies(self) -> None:
         """Map dependencies between services."""

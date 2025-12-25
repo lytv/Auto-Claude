@@ -25,7 +25,7 @@ Usage:
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 # =============================================================================
 # DATA CLASSES
@@ -51,9 +51,9 @@ class TestFramework:
     name: str
     type: str  # unit, integration, e2e, all
     command: str
-    config_file: str | None = None
-    version: str | None = None
-    coverage_command: str | None = None
+    config_file: Optional[str] = None
+    version: Optional[str] = None
+    coverage_command: Optional[str] = None
 
 
 @dataclass
@@ -77,7 +77,7 @@ class TestDiscoveryResult:
     test_directories: list[str] = field(default_factory=list)
     package_manager: str = ""
     has_tests: bool = False
-    coverage_command: str | None = None
+    coverage_command: Optional[str] = None
 
 
 # =============================================================================

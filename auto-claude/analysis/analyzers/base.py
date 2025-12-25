@@ -8,6 +8,8 @@ Provides common constants, utilities, and base functionality shared across all a
 import json
 from pathlib import Path
 
+from typing import Optional
+
 # Directories to skip during analysis
 SKIP_DIRS = {
     "node_modules",
@@ -101,7 +103,7 @@ class BaseAnalyzer:
         except (OSError, UnicodeDecodeError):
             return ""
 
-    def _read_json(self, path: str) -> dict | None:
+    def _read_json(self, path: str) -> Optional[dict]:
         """Read and parse a JSON file relative to the analyzer's path."""
         content = self._read_file(path)
         if content:

@@ -10,7 +10,7 @@ Detects monitoring and observability setup:
 """
 
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from ..base import BaseAnalyzer
 
@@ -48,7 +48,7 @@ class MonitoringDetector(BaseAnalyzer):
         if monitoring_info:
             self.analysis["monitoring"] = monitoring_info
 
-    def _detect_health_checks(self) -> list[str] | None:
+    def _detect_health_checks(self) -> Optional[list[str]]:
         """Detect health check endpoints from API routes."""
         if "api" not in self.analysis:
             return None
@@ -62,7 +62,7 @@ class MonitoringDetector(BaseAnalyzer):
 
         return health_routes if health_routes else None
 
-    def _detect_prometheus(self) -> dict[str, str] | None:
+    def _detect_prometheus(self) -> Optional[dict[str, str]]:
         """Detect Prometheus metrics endpoint."""
         # Look for actual Prometheus imports/usage, not just keywords
         all_files = (
@@ -96,7 +96,7 @@ class MonitoringDetector(BaseAnalyzer):
 
         return None
 
-    def _get_apm_tools(self) -> list[str] | None:
+    def _get_apm_tools(self) -> Optional[list[str]]:
         """Get APM tools from existing services analysis."""
         if (
             "services" not in self.analysis

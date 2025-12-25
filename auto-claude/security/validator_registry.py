@@ -26,6 +26,7 @@ from .process_validators import (
     validate_pkill_command,
 )
 from .validation_models import ValidatorFunction
+from typing import Optional
 
 # Map command names to their validation functions
 VALIDATORS: dict[str, ValidatorFunction] = {
@@ -55,7 +56,7 @@ VALIDATORS: dict[str, ValidatorFunction] = {
 }
 
 
-def get_validator(command_name: str) -> ValidatorFunction | None:
+def get_validator(command_name: str) -> Optional[ValidatorFunction]:
     """
     Get the validator function for a given command name.
 

@@ -24,7 +24,7 @@ Usage:
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 # =============================================================================
 # DATA CLASSES
@@ -127,7 +127,7 @@ class RiskAssessment:
     recommended_phases: list[str]
     flags: AssessmentFlags
     validation: ValidationRecommendations
-    created_at: str | None = None
+    created_at: Optional[str] = None
 
     @property
     def risk_level(self) -> str:
@@ -153,7 +153,7 @@ class RiskClassifier:
         """Initialize the risk classifier."""
         self._cache: dict[str, RiskAssessment] = {}
 
-    def load_assessment(self, spec_dir: Path) -> RiskAssessment | None:
+    def load_assessment(self, spec_dir: Path) -> Optional[RiskAssessment]:
         """
         Load complexity_assessment.json from spec directory.
 
@@ -520,7 +520,7 @@ class RiskClassifier:
 # =============================================================================
 
 
-def load_risk_assessment(spec_dir: Path) -> RiskAssessment | None:
+def load_risk_assessment(spec_dir: Path) -> Optional[RiskAssessment]:
     """
     Convenience function to load a risk assessment.
 

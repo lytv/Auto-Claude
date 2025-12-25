@@ -21,6 +21,7 @@ import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional
 
 # =============================================================================
 # SECRET PATTERNS
@@ -393,7 +394,7 @@ def get_all_tracked_files() -> list[str]:
 
 def scan_files(
     files: list[str],
-    project_dir: Path | None = None,
+    project_dir: Optional[Path] = None,
 ) -> list[SecretMatch]:
     """Scan a list of files for secrets."""
     if project_dir is None:

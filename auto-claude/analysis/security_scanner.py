@@ -25,7 +25,7 @@ import json
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 # Import the existing secrets scanner
 try:
@@ -61,9 +61,9 @@ class SecurityVulnerability:
     source: str  # secrets, bandit, npm_audit, semgrep, etc.
     title: str
     description: str
-    file: str | None = None
-    line: int | None = None
-    cwe: str | None = None
+    file: Optional[str] = None
+    line: Optional[int] = None
+    cwe: Optional[str] = None
 
 
 @dataclass
@@ -103,14 +103,14 @@ class SecurityScanner:
 
     def __init__(self) -> None:
         """Initialize the security scanner."""
-        self._bandit_available: bool | None = None
-        self._npm_available: bool | None = None
+        self._bandit_available: Optional[bool] = None
+        self._npm_available: Optional[bool] = None
 
     def scan(
         self,
         project_dir: Path,
-        spec_dir: Path | None = None,
-        changed_files: list[str] | None = None,
+        spec_dir: Optional[Path] = None,
+        changed_files: Optional[list[str]] = None,
         run_secrets: bool = True,
         run_sast: bool = True,
         run_dependency_audit: bool = True,
@@ -164,7 +164,7 @@ class SecurityScanner:
     def _run_secrets_scan(
         self,
         project_dir: Path,
-        changed_files: list[str] | None,
+        changed_files: Optional[list[str]],
         result: SecurityScanResult,
     ) -> None:
         """Run secrets scanning using scan_secrets.py."""
@@ -483,8 +483,8 @@ class SecurityScanner:
 
 def scan_for_security_issues(
     project_dir: Path,
-    spec_dir: Path | None = None,
-    changed_files: list[str] | None = None,
+    spec_dir: Optional[Path] = None,
+    changed_files: Optional[list[str]] = None,
 ) -> SecurityScanResult:
     """
     Convenience function to run security scan.
@@ -518,7 +518,7 @@ def has_security_issues(project_dir: Path) -> bool:
 
 def scan_secrets_only(
     project_dir: Path,
-    changed_files: list[str] | None = None,
+    changed_files: Optional[list[str]] = None,
 ) -> list[dict[str, Any]]:
     """
     Scan only for secrets (quick scan).

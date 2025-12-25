@@ -31,7 +31,7 @@ cat context.json
 ```
 
 Extract from these files:
-- **From project_index.json**: Services, tech stacks, ports, run commands
+- **From project_index.json**: Services, tech stacks, ports, run commands, **IMPLIED PATTERNS**
 - **From requirements.json**: Task description, workflow type, services, acceptance criteria
 - **From context.json**: Files to modify, files to reference, patterns
 
@@ -55,6 +55,12 @@ Before writing, think about:
 - What patterns from reference files apply?
 - What utilities can be reused?
 - What's the code style?
+
+### 1.4: Implied Protocols (CRITICAL)
+- Check `implied_patterns` in `project_index.json`.
+- **IF** "Localization Enforced" is present -> YOU MUST plan for adding translation keys.
+- **IF** "Database Migration Protocol" is present -> YOU MUST include migration files.
+- **IF** "Strict Typing" is present -> YOU MUST enforce interfaces.
 
 ---
 

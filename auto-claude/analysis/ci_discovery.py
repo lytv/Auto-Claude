@@ -26,7 +26,7 @@ import json
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 # Try to import yaml, fall back gracefully
 try:
@@ -77,7 +77,7 @@ class CIConfig:
     ci_system: str
     config_files: list[str] = field(default_factory=list)
     test_commands: dict[str, str] = field(default_factory=dict)
-    coverage_command: str | None = None
+    coverage_command: Optional[str] = None
     workflows: list[CIWorkflow] = field(default_factory=list)
     environment_variables: list[str] = field(default_factory=list)
 
@@ -100,9 +100,9 @@ class CIDiscovery:
 
     def __init__(self) -> None:
         """Initialize CI discovery."""
-        self._cache: dict[str, CIConfig | None] = {}
+        self._cache: dict[str, Optional[CIConfig]] = {}
 
-    def discover(self, project_dir: Path) -> CIConfig | None:
+    def discover(self, project_dir: Path) -> Optional[CIConfig]:
         """
         Discover CI configuration in the project.
 
@@ -405,7 +405,7 @@ class CIDiscovery:
 
         return result
 
-    def _parse_yaml(self, content: str) -> dict | None:
+    def _parse_yaml(self, content: str) -> Optional[dict]:
         """Parse YAML content, with fallback to basic parsing if yaml not available."""
         if HAS_YAML:
             try:
@@ -493,7 +493,7 @@ class CIDiscovery:
 # =============================================================================
 
 
-def discover_ci(project_dir: Path) -> CIConfig | None:
+def discover_ci(project_dir: Path) -> Optional[CIConfig]:
     """
     Convenience function to discover CI configuration.
 
@@ -524,7 +524,7 @@ def get_ci_test_commands(project_dir: Path) -> dict[str, str]:
     return {}
 
 
-def get_ci_system(project_dir: Path) -> str | None:
+def get_ci_system(project_dir: Path) -> Optional[str]:
     """
     Get the CI system name if configured.
 

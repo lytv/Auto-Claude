@@ -10,6 +10,7 @@ import hashlib
 import json
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
 from .command_registry import (
     BASE_COMMANDS,
@@ -43,7 +44,7 @@ class ProjectAnalyzer:
 
     PROFILE_FILENAME = ".auto-claude-security.json"
 
-    def __init__(self, project_dir: Path, spec_dir: Path | None = None):
+    def __init__(self, project_dir: Path, spec_dir: Optional[Path] = None):
         """
         Initialize analyzer.
 
@@ -62,7 +63,7 @@ class ProjectAnalyzer:
             return self.spec_dir / self.PROFILE_FILENAME
         return self.project_dir / self.PROFILE_FILENAME
 
-    def load_profile(self) -> SecurityProfile | None:
+    def load_profile(self) -> Optional[SecurityProfile]:
         """Load existing profile if it exists."""
         profile_path = self.get_profile_path()
         if not profile_path.exists():

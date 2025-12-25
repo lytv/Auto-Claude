@@ -8,7 +8,7 @@ Main enforcement point for the security system.
 
 import os
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from project_analyzer import BASE_COMMANDS, SecurityProfile, is_command_allowed
 
@@ -19,8 +19,8 @@ from .validator import VALIDATORS
 
 async def bash_security_hook(
     input_data: dict[str, Any],
-    tool_use_id: str | None = None,
-    context: Any | None = None,
+    tool_use_id: Optional[str] = None,
+    context: Optional[Any] = None,
 ) -> dict[str, Any]:
     """
     Pre-tool-use hook that validates bash commands using dynamic allowlist.
@@ -105,7 +105,7 @@ async def bash_security_hook(
 
 def validate_command(
     command: str,
-    project_dir: Path | None = None,
+    project_dir: Optional[Path] = None,
 ) -> tuple[bool, str]:
     """
     Validate a command string (for testing/debugging).

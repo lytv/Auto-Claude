@@ -11,7 +11,7 @@ Detects background job and task queue systems:
 
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from ..base import BaseAnalyzer
 
@@ -39,7 +39,7 @@ class JobsDetector(BaseAnalyzer):
         if jobs_info:
             self.analysis["background_jobs"] = jobs_info
 
-    def _detect_celery(self) -> dict[str, Any] | None:
+    def _detect_celery(self) -> Optional[dict[str, Any]]:
         """Detect Celery (Python) task queue."""
         celery_files = list(self.path.glob("**/celery.py")) + list(
             self.path.glob("**/tasks.py")
@@ -76,7 +76,7 @@ class JobsDetector(BaseAnalyzer):
             "worker_command": "celery -A app worker",
         }
 
-    def _detect_bullmq(self) -> dict[str, Any] | None:
+    def _detect_bullmq(self) -> Optional[dict[str, Any]]:
         """Detect BullMQ/Bull (Node.js) task queue."""
         if not self._exists("package.json"):
             return None
@@ -101,7 +101,7 @@ class JobsDetector(BaseAnalyzer):
 
         return None
 
-    def _detect_sidekiq(self) -> dict[str, Any] | None:
+    def _detect_sidekiq(self) -> Optional[dict[str, Any]]:
         """Detect Sidekiq (Ruby) background jobs."""
         if not self._exists("Gemfile"):
             return None
