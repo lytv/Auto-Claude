@@ -19,7 +19,11 @@ from linear_updater import (
     linear_qa_rejected,
     linear_qa_started,
 )
-from phase_config import get_phase_model, get_phase_thinking_budget
+from phase_config import (
+    get_phase_model,
+    get_phase_thinking_budget,
+    load_task_metadata,
+)
 from progress import count_subtasks, is_build_complete
 from task_logger import (
     LogPhase,
@@ -306,6 +310,30 @@ async def run_qa_validation_loop(
             record_iteration(
                 spec_dir, qa_iteration, "rejected", current_issues, iteration_duration
             )
+
+            # Check for "Require human review before validation" setting
+            # If enabled (True), stop the loop to allow human to review issues before fixing
+            # If disabled (False/None), continue to auto-fix (default behavior)
+            metadata = load_task_metadata(spec_dir)
+            require_review = False
+            if metadata:
+                require_review = metadata.get("requireReviewBeforeValidation", False)
+
+            if require_review:
+                print("\n" + "=" * 70)
+                print("  ✋ STOPPING FOR HUMAN REVIEW")
+                print("=" * 70)
+                print("\n'Require human review before validation' is ENABLED.")
+                print("Stopping automated fix loop to allow manual review of issues.")
+                print(f"See report: {spec_dir / 'qa_report.md'}")
+                
+                if task_logger:
+                    task_logger.end_phase(
+                        LogPhase.VALIDATION,
+                        success=False,
+                        message="Stopped for human review (requested in settings)",
+                    )
+                return False
 
             # Check for recurring issues
             history = get_iteration_history(spec_dir)

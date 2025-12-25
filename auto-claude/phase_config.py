@@ -125,6 +125,8 @@ class TaskMetadataConfig(TypedDict, total=False):
     phaseThinking: PhaseThinkingConfig
     model: str
     thinkingLevel: str
+    requireReviewBeforeCoding: bool
+    requireReviewBeforeValidation: bool
 
 
 Phase = Literal["spec", "planning", "coding", "qa"]

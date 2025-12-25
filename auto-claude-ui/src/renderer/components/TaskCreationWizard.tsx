@@ -118,6 +118,7 @@ export function TaskCreationWizard({
 
   // Review setting
   const [requireReviewBeforeCoding, setRequireReviewBeforeCoding] = useState(false);
+  const [requireReviewBeforeValidation, setRequireReviewBeforeValidation] = useState(false);
 
   // Draft state
   const [isDraftRestored, setIsDraftRestored] = useState(false);
@@ -152,6 +153,7 @@ export function TaskCreationWizard({
         setImages(draft.images);
         setReferencedFiles(draft.referencedFiles ?? []);
         setRequireReviewBeforeCoding(draft.requireReviewBeforeCoding ?? false);
+        setRequireReviewBeforeValidation(draft.requireReviewBeforeValidation ?? false);
         setIsDraftRestored(true);
 
         // Expand sections if they have content
@@ -237,8 +239,9 @@ export function TaskCreationWizard({
     images,
     referencedFiles,
     requireReviewBeforeCoding,
+    requireReviewBeforeValidation,
     savedAt: new Date()
-  }), [projectId, title, description, category, priority, complexity, impact, profileId, model, thinkingLevel, phaseModels, phaseThinking, images, referencedFiles, requireReviewBeforeCoding]);
+  }), [projectId, title, description, category, priority, complexity, impact, profileId, model, thinkingLevel, phaseModels, phaseThinking, images, referencedFiles, requireReviewBeforeCoding, requireReviewBeforeValidation]);
   /**
    * Handle paste event for screenshot support
    */
@@ -596,6 +599,7 @@ export function TaskCreationWizard({
       if (images.length > 0) metadata.attachedImages = images;
       if (allReferencedFiles.length > 0) metadata.referencedFiles = allReferencedFiles;
       if (requireReviewBeforeCoding) metadata.requireReviewBeforeCoding = true;
+      if (requireReviewBeforeValidation) metadata.requireReviewBeforeValidation = true;
       // Only include baseBranch if it's not the project default placeholder
       if (baseBranch && baseBranch !== PROJECT_DEFAULT_BRANCH) metadata.baseBranch = baseBranch;
 
@@ -633,6 +637,7 @@ export function TaskCreationWizard({
     setImages([]);
     setReferencedFiles([]);
     setRequireReviewBeforeCoding(false);
+    setRequireReviewBeforeValidation(false);
     setBaseBranch(PROJECT_DEFAULT_BRANCH);
     setError(null);
     setShowAdvanced(false);
@@ -1039,6 +1044,28 @@ export function TaskCreationWizard({
                   </Label>
                   <p className="text-xs text-muted-foreground">
                     When enabled, you&apos;ll be prompted to review the spec and implementation plan before the coding phase begins. This allows you to approve, request changes, or provide feedback.
+                  </p>
+                </div>
+              </div>
+
+              {/* Validation Review Requirement Toggle */}
+              <div className="flex items-start gap-3 p-4 rounded-lg border border-border bg-muted/30">
+                <Checkbox
+                  id="require-validation-review"
+                  checked={requireReviewBeforeValidation}
+                  onCheckedChange={(checked) => setRequireReviewBeforeValidation(checked === true)}
+                  disabled={isCreating}
+                  className="mt-0.5"
+                />
+                <div className="flex-1 space-y-1">
+                  <Label
+                    htmlFor="require-validation-review"
+                    className="text-sm font-medium text-foreground cursor-pointer"
+                  >
+                    Require human review before validation
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    When enabled, the agent will stop after validation issues are found and wait for your approval. If disabled, it will automatically attempt to fix validation issues.
                   </p>
                 </div>
               </div>

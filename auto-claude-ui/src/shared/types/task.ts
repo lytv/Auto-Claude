@@ -145,6 +145,7 @@ export interface TaskDraft {
   images: ImageAttachment[];
   referencedFiles: ReferencedFile[];
   requireReviewBeforeCoding?: boolean;
+  requireReviewBeforeValidation?: boolean;
   savedAt: Date;
 }
 
@@ -211,6 +212,7 @@ export interface TaskMetadata {
 
   // Review settings
   requireReviewBeforeCoding?: boolean;  // Require human review of spec/plan before coding starts
+  requireReviewBeforeValidation?: boolean;  // Require human review of validation results before auto-fixing (defaults to true if undefined)
 
   // Agent configuration (from agent profile or manual selection)
   model?: ModelType;  // Claude model to use (haiku, sonnet, opus) - used when not auto profile
