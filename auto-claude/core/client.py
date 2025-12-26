@@ -22,6 +22,12 @@ from core.auth import get_sdk_env_vars, require_auth_token
 from linear_updater import is_linear_enabled
 from prompts_pkg.project_context import detect_project_capabilities, load_project_index
 from security import bash_security_hook
+from skills import (
+    TOOL_GET_SKILL_DETAILS,
+    build_skill_inventory_prompt,
+    create_skill_tools,
+    discover_skills,
+)
 from ui import Icons, highlight, icon
 
 
@@ -190,6 +196,15 @@ def create_client(
     else:
         allowed_tools_list = [*BUILTIN_TOOLS]
 
+    # Discover skills from .claude/skills/ (Tier 1: inventory only)
+    discovered_skills = discover_skills(project_dir)
+    skill_inventory_prompt = ""
+    if discovered_skills:
+        skill_inventory_prompt = build_skill_inventory_prompt(discovered_skills)
+        # Add get_skill_details tool for Tier 2 on-demand loading
+        allowed_tools_list.append(TOOL_GET_SKILL_DETAILS)
+        print(f"   - Skills discovered: {len(discovered_skills)} available")
+
     # Check if Graphiti MCP is enabled
     graphiti_mcp_enabled = is_graphiti_mcp_enabled()
 
@@ -349,6 +364,7 @@ def create_client(
                 f"You follow existing code patterns, write clean maintainable code, and verify "
                 f"your work through thorough testing. You communicate progress through Git commits "
                 f"and build-progress.txt updates."
+                f"{skill_inventory_prompt}"
             ),
             allowed_tools=allowed_tools_list,
             mcp_servers=mcp_servers,

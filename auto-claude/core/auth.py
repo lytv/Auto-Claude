@@ -8,6 +8,7 @@ for custom API endpoints.
 
 import json
 import os
+import platform
 import subprocess
 from pathlib import Path
 from dotenv import load_dotenv

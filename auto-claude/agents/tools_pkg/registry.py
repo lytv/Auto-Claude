@@ -22,6 +22,14 @@ from .tools import (
     create_subtask_tools,
 )
 
+# Import skill tools
+try:
+    from skills import create_skill_tools
+    SKILL_TOOLS_AVAILABLE = True
+except ImportError:
+    SKILL_TOOLS_AVAILABLE = False
+    create_skill_tools = None
+
 
 def create_all_tools(spec_dir: Path, project_dir: Path) -> list:
     """
@@ -44,6 +52,10 @@ def create_all_tools(spec_dir: Path, project_dir: Path) -> list:
     all_tools.extend(create_progress_tools(spec_dir, project_dir))
     all_tools.extend(create_memory_tools(spec_dir, project_dir))
     all_tools.extend(create_qa_tools(spec_dir, project_dir))
+
+    # Add skill tools for Tier 2 on-demand loading
+    if SKILL_TOOLS_AVAILABLE and create_skill_tools:
+        all_tools.extend(create_skill_tools(project_dir))
 
     return all_tools
 
