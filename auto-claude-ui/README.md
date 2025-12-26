@@ -31,76 +31,88 @@ npm run package:linux  # Linux
 - **Windows only**: Visual Studio Build Tools 2022 with "Desktop development with C++" workload
 - **Windows only**: Developer Mode enabled (Settings → System → For developers)
 
-## How to Run
+## Configuration & Environment Variables
 
-### Building for Production (Recommended)
+Auto Claude UI manages a local `.env` file in your project's `auto-claude` directory. You can configure these variables through the UI (Settings > Integrations) or manually edits the `.env` file.
 
-Build the Electron desktop app for your platform:
+### Core Configuration
+- `CLAUDE_CODE_OAUTH_TOKEN`: (Required) OAuth token for Claude Code SDK.
+- `AUTO_BUILD_MODEL`: Override the default model (e.g., `claude-opus-4-5-20251101`).
+
+### Provider Configuration (Graphiti & Memory)
+Auto Claude supports multiple AI providers for its memory and knowledge graph subsystem (Graphiti).
+
+**OpenAI**
+- `OPENAI_API_KEY`: Your OpenAI API Key.
+- `OPENAI_MODEL`: Model to use (default: `gpt-4o-mini`).
+- `OPENAI_EMBEDDING_MODEL`: Embedding model (default: `text-embedding-3-small`).
+
+**Anthropic**
+- `ANTHROPIC_API_KEY`: Your Anthropic API Key.
+- `GRAPHITI_ANTHROPIC_MODEL`: Model to use (default: `claude-sonnet-4-5-latest`).
+
+**Azure OpenAI**
+- `AZURE_OPENAI_API_KEY`: Azure API Key.
+- `AZURE_OPENAI_BASE_URL`: Endpoint URL.
+- `AZURE_OPENAI_LLM_DEPLOYMENT`: Deployment name for LLM.
+- `AZURE_OPENAI_EMBEDDING_DEPLOYMENT`: Deployment name for embeddings.
+
+**Google / Gemini**
+- `GOOGLE_API_KEY`: Google AI API Key.
+- `GOOGLE_LLM_MODEL`: Model (default: `gemini-2.0-flash`).
+- `GOOGLE_EMBEDDING_MODEL`: Embedding model (default: `text-embedding-004`).
+
+**Ollama (Local)**
+- `OLLAMA_BASE_URL`: URL for Ollama server (default: `http://localhost:11434`).
+- `OLLAMA_LLM_MODEL`: API model name.
+- `OLLAMA_EMBEDDING_MODEL`: Embedding model name.
+- `OLLAMA_EMBEDDING_DIM`: Embedding dimensions (default: `768`).
+
+**Voyage AI**
+- `VOYAGE_API_KEY`: API Key for Voyage embeddings.
+- `VOYAGE_EMBEDDING_MODEL`: Model (default: `voyage-3`).
+
+### Integrations
+
+**Linear**
+- `LINEAR_API_KEY`: API key for Linear sync.
+- `LINEAR_TEAM_ID`: (Optional) Filter by team.
+- `LINEAR_PROJECT_ID`: (Optional) Filter by project.
+- `LINEAR_REALTIME_SYNC`: `true`/`false` to enable real-time webhook sync.
+
+**GitHub**
+- `GITHUB_TOKEN`: Personal Access Token (PAT) with `repo` scope.
+- `GITHUB_REPO`: Repository identifier (e.g., `owner/repo`).
+- `GITHUB_AUTO_SYNC`: `true`/`false` to auto-fetch issues.
+
+**Git / Worktrees**
+- `DEFAULT_BRANCH`: Base branch for creating task worktrees (default: `main`).
+
+---
+
+## using y-router and Proxies
+
+Auto Claude supports routing AI traffic through proxies like **y-router** for enhanced control, rate limiting optimization, and caching.
+
+To configure `y-router` or any compatible proxy:
+
+1.  **Deploy your router**: Ensure `y-router` is running (e.g., at `http://localhost:8080`).
+2.  **Configure Base URLs**: Set the `BASE_URL` environment variables to point to your router.
+    *   For **OpenAI-compatible** routing: Set `OPENAI_BASE_URL` (if supported by your provider config) or use `AZURE_OPENAI_BASE_URL` / `OLLAMA_BASE_URL` depending on the protocol.
+    *   The Agent process inherits your system environment variables, so you can also set `ANTHROPIC_BASE_URL` or `OPENAI_BASE_URL` globally before launching the app.
+3.  **Model Mapping**: `y-router` typically handles model mapping. Ensure your `AUTO_BUILD_MODEL` or provider model names match what `y-router` expects or map them in the router config.
+
+## Development
 
 ```bash
-# Build for Windows
-npm run package:win
-
-# Build for macOS
-npm run package:mac
-
-# Build for Linux
-npm run package:linux
-```
-
-### Running the Production Build
-
-After building, run the application from the `dist` folder:
-
-```bash
-# Windows - run the executable
-.\dist\win-unpacked\Auto Claude.exe
-
-# Windows - or use the installer
-.\dist\Auto Claude Setup X.X.X.exe
-
-# macOS
-open dist/mac-arm64/Auto\ Claude.app
-
-# Linux
-./dist/linux-unpacked/auto-claude
-```
-
-### Development Mode
-
-For development with hot reload (optional):
-
-```bash
+# Run in development mode with hot reload
 npm run dev
-```
 
-> **Note**: Some features like auto-updates only work in packaged builds.
-
-## Distribution Files
-
-After packaging, the `dist` folder contains:
-
-| Platform | Files |
-|----------|-------|
-| macOS | `Auto Claude.app`, `.dmg`, `.zip` |
-| Windows | `Auto Claude Setup X.X.X.exe` (installer), `.zip`, `win-unpacked/` |
-| Linux | `.AppImage`, `.deb`, `linux-unpacked/` |
-
-## Testing
-
-```bash
 # Run tests
 npm run test
-```
 
-## Linting
-
-```bash
 # Run ESLint
 npm run lint
-
-# Run type checking
-npm run typecheck
 ```
 
 ## Features
@@ -112,19 +124,7 @@ npm run typecheck
 - **Human Review Workflow**: Review QA results and provide feedback
 - **Theme Support**: Light and dark mode
 - **Auto Updates**: Automatic update notifications
-
-## Tech Stack
-
-- **Framework**: Electron + React 18 (TypeScript)
-- **Build Tool**: electron-vite + electron-builder
-- **UI Components**: Radix UI (shadcn/ui pattern)
-- **Styling**: TailwindCSS
-- **State Management**: Zustand
-
-## Environment Variables
-
-- `CLAUDE_CODE_OAUTH_TOKEN`: OAuth token for Claude Code SDK (from auto-claude/.env)
-- `FALKORDB_URL`: FalkorDB connection URL (optional)
+- **Multi-Provider AI**: Support for OpenAI, Anthropic, Google, Azure, and Ollama backends.
 
 ## License
 
