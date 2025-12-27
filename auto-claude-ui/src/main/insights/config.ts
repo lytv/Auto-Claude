@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from 'fs';
 import { app } from 'electron';
 import { getProfileEnv } from '../rate-limit-detector';
 import { findPythonCommand } from '../python-detector';
+import { projectStore } from '../project-store';
 
 /**
  * Configuration manager for insights service
@@ -102,8 +103,10 @@ export class InsightsConfig {
     const autoBuildEnv = this.loadAutoBuildEnv();
     const profileEnv = getProfileEnv();
     let projectEnv: Record<string, string> = {};
+    let projectSettingsEnv: Record<string, string> = {};
 
     if (projectPath) {
+      // Load from .env file
       const projectEnvPath = path.join(projectPath, '.auto-claude', '.env');
       if (existsSync(projectEnvPath)) {
         try {
@@ -127,12 +130,23 @@ export class InsightsConfig {
           console.error('[InsightsConfig] Failed to load project env:', err);
         }
       }
+
+      // Load from UI project settings (important for GRAPHITI_MCP_URL)
+      const projects = projectStore.getProjects();
+      const normalizedPath = path.resolve(projectPath);
+      const project = projects.find((p) => path.resolve(p.path) === normalizedPath);
+      if (project?.settings) {
+        if (project.settings.graphitiMcpEnabled && project.settings.graphitiMcpUrl) {
+          projectSettingsEnv['GRAPHITI_MCP_URL'] = project.settings.graphitiMcpUrl;
+        }
+      }
     }
 
     return {
       ...process.env as Record<string, string>,
       ...autoBuildEnv,
       ...projectEnv, // Project env overrides framework env
+      ...projectSettingsEnv, // UI settings override file env
       ...profileEnv,
       PYTHONUNBUFFERED: '1',
       PYTHONIOENCODING: 'utf-8',
@@ -140,3 +154,4 @@ export class InsightsConfig {
     };
   }
 }
+

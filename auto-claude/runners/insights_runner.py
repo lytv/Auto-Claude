@@ -106,12 +106,36 @@ def load_project_context(project_dir: str) -> str:
 def build_system_prompt(project_dir: str) -> str:
     """Build the system prompt for the insights agent."""
     context = load_project_context(project_dir)
+    
+    # Check if Graphiti Memory is available
+    mcp_url = os.environ.get("GRAPHITI_MCP_URL")
+    memory_instructions = ""
+    if mcp_url:
+        memory_instructions = """
+## Memory Access
+You have access to a persistent knowledge graph memory. Use it to:
+1. **Remember user preferences and information** - When users share personal info (name, preferences, etc.), it may be stored in memory
+2. **Recall past conversations** - Search for relevant context from previous sessions
+3. **Track project learnings** - Access patterns, decisions, and insights discovered earlier
+
+**Available memory tools:**
+- `mcp__graphiti-memory__search_nodes` - Search for entities (people, concepts, facts) by name or keywords
+- `mcp__graphiti-memory__search_facts` - Search for relationships and facts between entities
+- `mcp__graphiti-memory__get_episodes` - Get recent memory episodes
+
+**When to search memory:**
+- When user asks personal questions ("what is my name?", "do you remember...?")
+- When user references past conversations
+- When you need context about project decisions or patterns
+
+Always search memory first when answering questions that might rely on previous context.
+"""
 
     return f"""You are an AI assistant helping developers understand and work with their codebase.
 You have access to the following project context:
 
 {context}
-
+{memory_instructions}
 Your capabilities:
 1. Answer questions about the codebase structure, patterns, and architecture
 2. Suggest improvements, features, or bug fixes based on the code
@@ -127,6 +151,7 @@ Valid impact: low, medium, high, critical
 
 Be conversational and helpful. Focus on providing actionable insights and clear explanations.
 Keep responses concise but informative."""
+
 
 
 async def run_with_sdk(
