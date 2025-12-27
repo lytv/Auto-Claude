@@ -80,7 +80,7 @@ export class InsightsConfig {
           let value = trimmed.substring(eqIndex + 1).trim();
 
           if ((value.startsWith('"') && value.endsWith('"')) ||
-              (value.startsWith("'") && value.endsWith("'"))) {
+            (value.startsWith("'") && value.endsWith("'"))) {
             value = value.slice(1, -1);
           }
 
@@ -96,15 +96,43 @@ export class InsightsConfig {
 
   /**
    * Get complete environment for process execution
-   * Includes system env, auto-claude env, and active Claude profile
+   * Includes system env, auto-claude env, active Claude profile, and project-specific env
    */
-  getProcessEnv(): Record<string, string> {
+  getProcessEnv(projectPath?: string): Record<string, string> {
     const autoBuildEnv = this.loadAutoBuildEnv();
     const profileEnv = getProfileEnv();
+    let projectEnv: Record<string, string> = {};
+
+    if (projectPath) {
+      const projectEnvPath = path.join(projectPath, '.auto-claude', '.env');
+      if (existsSync(projectEnvPath)) {
+        try {
+          const content = readFileSync(projectEnvPath, 'utf-8');
+          // Simple parser matching loadAutoBuildEnv logic
+          for (const line of content.split(/\r?\n/)) {
+            const trimmed = line.trim();
+            if (!trimmed || trimmed.startsWith('#')) continue;
+            const eqIndex = trimmed.indexOf('=');
+            if (eqIndex > 0) {
+              const key = trimmed.substring(0, eqIndex).trim();
+              let value = trimmed.substring(eqIndex + 1).trim();
+              if ((value.startsWith('"') && value.endsWith('"')) ||
+                (value.startsWith("'") && value.endsWith("'"))) {
+                value = value.slice(1, -1);
+              }
+              projectEnv[key] = value;
+            }
+          }
+        } catch (err) {
+          console.error('[InsightsConfig] Failed to load project env:', err);
+        }
+      }
+    }
 
     return {
       ...process.env as Record<string, string>,
       ...autoBuildEnv,
+      ...projectEnv, // Project env overrides framework env
       ...profileEnv,
       PYTHONUNBUFFERED: '1',
       PYTHONIOENCODING: 'utf-8',

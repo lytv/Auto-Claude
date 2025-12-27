@@ -81,9 +81,10 @@ export class AgentProcessManager {
   private getProjectEnvVars(projectPath: string): Record<string, string> {
     const env: Record<string, string> = {};
 
-    // Find project by path
+    // Use path.resolve to normalize paths for comparison
     const projects = projectStore.getProjects();
-    const project = projects.find((p) => p.path === projectPath);
+    const normalizedPath = path.resolve(projectPath);
+    const project = projects.find((p) => path.resolve(p.path) === normalizedPath);
 
     if (project?.settings) {
       // Graphiti MCP integration
@@ -97,7 +98,39 @@ export class AgentProcessManager {
   }
 
   /**
-   * Load environment variables from auto-claude .env file
+   * Parse .env file content into a record
+   */
+  private parseEnvFileContent(content: string): Record<string, string> {
+    const envVars: Record<string, string> = {};
+
+    // Handle both Unix (\n) and Windows (\r\n) line endings
+    for (const line of content.split(/\r?\n/)) {
+      const trimmed = line.trim();
+      // Skip comments and empty lines
+      if (!trimmed || trimmed.startsWith('#')) {
+        continue;
+      }
+
+      const eqIndex = trimmed.indexOf('=');
+      if (eqIndex > 0) {
+        const key = trimmed.substring(0, eqIndex).trim();
+        let value = trimmed.substring(eqIndex + 1).trim();
+
+        // Remove quotes if present
+        if ((value.startsWith('"') && value.endsWith('"')) ||
+          (value.startsWith("'") && value.endsWith("'"))) {
+          value = value.slice(1, -1);
+        }
+
+        envVars[key] = value;
+      }
+    }
+
+    return envVars;
+  }
+
+  /**
+   * Load environment variables from auto-claude framework .env file
    */
   loadAutoBuildEnv(): Record<string, string> {
     const autoBuildSource = this.getAutoBuildSourcePath();
@@ -112,32 +145,34 @@ export class AgentProcessManager {
 
     try {
       const envContent = readFileSync(envPath, 'utf-8');
-      const envVars: Record<string, string> = {};
+      return this.parseEnvFileContent(envContent);
+    } catch {
+      return {};
+    }
+  }
 
-      // Handle both Unix (\n) and Windows (\r\n) line endings
-      for (const line of envContent.split(/\r?\n/)) {
-        const trimmed = line.trim();
-        // Skip comments and empty lines
-        if (!trimmed || trimmed.startsWith('#')) {
-          continue;
-        }
+  /**
+   * Load project-specific environment variables from the project's .auto-claude/.env file
+   */
+  loadProjectEnv(projectPath: string): Record<string, string> {
+    // Find project to get its autoBuildPath
+    const projects = projectStore.getProjects();
+    const normalizedPath = path.resolve(projectPath);
+    const project = projects.find((p) => path.resolve(p.path) === normalizedPath);
+    if (!project) {
+      return {};
+    }
 
-        const eqIndex = trimmed.indexOf('=');
-        if (eqIndex > 0) {
-          const key = trimmed.substring(0, eqIndex).trim();
-          let value = trimmed.substring(eqIndex + 1).trim();
+    const autoBuildPath = project.autoBuildPath || '.auto-claude';
+    const envPath = path.join(projectPath, autoBuildPath, '.env');
 
-          // Remove quotes if present
-          if ((value.startsWith('"') && value.endsWith('"')) ||
-              (value.startsWith("'") && value.endsWith("'"))) {
-            value = value.slice(1, -1);
-          }
+    if (!existsSync(envPath)) {
+      return {};
+    }
 
-          envVars[key] = value;
-        }
-      }
-
-      return envVars;
+    try {
+      const envContent = readFileSync(envPath, 'utf-8');
+      return this.parseEnvFileContent(envContent);
     } catch {
       return {};
     }
@@ -163,12 +198,16 @@ export class AgentProcessManager {
     // Get active Claude profile environment (CLAUDE_CONFIG_DIR if not default)
     const profileEnv = getProfileEnv();
 
+    // Get combined environment from project and framework .env files
+    const projectCombinedEnv = this.getCombinedEnv(cwd);
+
     // Parse Python command to handle space-separated commands like "py -3"
     const [pythonCommand, pythonBaseArgs] = parsePythonCommand(this.pythonPath);
     const childProcess = spawn(pythonCommand, [...pythonBaseArgs, ...args], {
       cwd,
       env: {
         ...process.env,
+        ...projectCombinedEnv, // Include project .env vars (GRAPHITI_ENABLED, API keys, etc.)
         ...extraEnv,
         ...profileEnv, // Include active Claude profile config
         PYTHONUNBUFFERED: '1', // Ensure real-time output
@@ -400,8 +439,28 @@ export class AgentProcessManager {
    * Get combined environment variables for a project
    */
   getCombinedEnv(projectPath: string): Record<string, string> {
+    // 1. Load framework-level defaults
     const autoBuildEnv = this.loadAutoBuildEnv();
-    const projectEnv = this.getProjectEnvVars(projectPath);
-    return { ...autoBuildEnv, ...projectEnv };
+
+    // 2. Load project-specific .env (overrides framework defaults)
+    const projectEnvFile = this.loadProjectEnv(projectPath);
+
+    // 3. Get UI settings mapped to env vars (historical overrides)
+    const projectSettingsEnv = this.getProjectEnvVars(projectPath);
+
+    // Merge in order of priority: Settings > Project .env > Framework .env
+    const env = {
+      ...autoBuildEnv,
+      ...projectEnvFile,
+      ...projectSettingsEnv
+    };
+
+    // Logging for debugging (only log non-sensitive keys or partial keys)
+    const debugEnv = Object.fromEntries(
+      Object.entries(env).filter(([key]) => key.startsWith('GRAPHITI_'))
+    );
+    console.log(`[AgentProcessManager] Combined ENV for ${projectPath}:`, debugEnv);
+
+    return env;
   }
 }

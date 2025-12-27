@@ -54,6 +54,19 @@ def setup_environment() -> Path:
     return script_dir
 
 
+def load_project_environment(project_dir: Path) -> None:
+    """
+    Load environment variables from the project's .auto-claude/.env file.
+
+    Args:
+        project_dir: Root directory of the project
+    """
+    # Try .auto-claude/.env in project root
+    project_env = project_dir / ".auto-claude" / ".env"
+    if project_env.exists():
+        load_dotenv(project_env)
+
+
 def find_spec(
     project_dir: Path, spec_identifier: str, dev_mode: bool = False
 ) -> Path | None:

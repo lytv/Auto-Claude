@@ -258,6 +258,10 @@ def main() -> None:
     project_dir = get_project_dir(args.project_dir)
     debug("run.py", f"Using project directory: {project_dir}")
 
+    # Load project-specific environment variables
+    from .utils import load_project_environment
+    load_project_environment(project_dir)
+
     # Get model (with env var fallback)
     from phase_config import resolve_model_id
     model = resolve_model_id(

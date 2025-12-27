@@ -109,6 +109,10 @@ def main():
         "roadmap_runner", "Creating RoadmapOrchestrator", project_dir=str(project_dir)
     )
 
+    # Load project-specific environment variables (.auto-claude/.env)
+    from cli.utils import load_project_environment
+    load_project_environment(project_dir)
+
     from phase_config import resolve_model_id
     orchestrator = RoadmapOrchestrator(
         project_dir=project_dir,

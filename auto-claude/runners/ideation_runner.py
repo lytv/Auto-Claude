@@ -133,6 +133,10 @@ def main():
             print(f"Valid types: {IDEATION_TYPES}")
             sys.exit(1)
 
+    # Load project-specific environment variables (.auto-claude/.env)
+    from cli.utils import load_project_environment
+    load_project_environment(project_dir)
+
     from phase_config import resolve_model_id
     orchestrator = IdeationOrchestrator(
         project_dir=project_dir,

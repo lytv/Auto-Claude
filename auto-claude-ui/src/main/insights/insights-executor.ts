@@ -85,7 +85,7 @@ export class InsightsExecutor extends EventEmitter {
     } as InsightsChatStatus);
 
     // Get process environment
-    const processEnv = this.config.getProcessEnv();
+    const processEnv = this.config.getProcessEnv(projectPath);
 
     // Write conversation history to temp file to avoid Windows command-line length limit
     const historyFile = path.join(

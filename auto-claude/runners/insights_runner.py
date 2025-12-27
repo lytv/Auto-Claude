@@ -9,6 +9,7 @@ about a codebase. It can also suggest tasks based on the conversation.
 import argparse
 import asyncio
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -181,17 +182,32 @@ Current question: {message}"""
         thinking_level=thinking_level,
     )
 
+    # Build allowed tools list
+    allowed_tools = [
+        "Read",
+        "Glob",
+        "Grep",
+    ]
+
+    # Add Graphiti tools if MCP is enabled
+    mcp_url = os.environ.get("GRAPHITI_MCP_URL")
+    if mcp_url:
+        debug("insights_runner", "Adding Graphiti tools", mcp_url=mcp_url)
+        allowed_tools.extend([
+            "mcp__graphiti-memory__search_nodes",
+            "mcp__graphiti-memory__search_facts",
+            "mcp__graphiti-memory__add_episode",
+            "mcp__graphiti-memory__get_episodes",
+            "mcp__graphiti-memory__get_entity_edge",
+        ])
+
     try:
         # Create Claude SDK client with appropriate settings for insights
         client = ClaudeSDKClient(
             options=ClaudeAgentOptions(
                 model=model,  # Use configured model
                 system_prompt=system_prompt,
-                allowed_tools=[
-                    "Read",
-                    "Glob",
-                    "Grep",
-                ],
+                allowed_tools=allowed_tools,
                 max_turns=30,  # Allow sufficient turns for codebase exploration
                 cwd=str(project_path),
             )
@@ -268,6 +284,33 @@ Current question: {message}"""
                 "Response complete",
                 response_length=len(response_text),
             )
+
+            # Save to Graphiti Memory if enabled
+            if response_text:
+                try:
+                    from integrations.graphiti.memory import get_graphiti_memory, GroupIdMode
+                    # Use project directory for both to share context project-wide
+                    memory = get_graphiti_memory(
+                        spec_dir=project_path,
+                        project_dir=project_path,
+                        group_id_mode=GroupIdMode.PROJECT
+                    )
+                    if await memory.initialize():
+                        # Use save_session_insights with correct signature
+                        import hashlib
+                        session_num = int(hashlib.md5(f"insights_{project_path.name}".encode()).hexdigest()[:8], 16) % 10000
+                        insights = {
+                            "source": "insights_chat",
+                            "content": response_text[:2000],  # Limit for safety
+                            "project": project_path.name,
+                        }
+                        await memory.save_session_insights(session_num, insights)
+                        await memory.close()
+                except Exception:
+                    pass  # Silently ignore memory save errors
+
+
+
 
     except Exception as e:
         print(f"Error using Claude SDK: {e}", file=sys.stderr)
@@ -361,6 +404,10 @@ def main():
     user_message = args.message
     model = args.model
     thinking_level = args.thinking_level
+
+    # Load project-specific environment variables (.auto-claude/.env)
+    from cli.utils import load_project_environment
+    load_project_environment(Path(project_dir))
 
     debug(
         "insights_runner",

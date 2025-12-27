@@ -238,6 +238,10 @@ Examples:
                 project_dir = parent
                 break
 
+    # Load project-specific environment variables
+    from cli.utils import load_project_environment
+    load_project_environment(project_dir)
+
     # Note: --dev flag is deprecated but kept for API compatibility
     if args.dev:
         print(
